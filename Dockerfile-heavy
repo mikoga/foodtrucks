@@ -1,0 +1,23 @@
+# Use an Alpine-based Node.js image
+FROM node:14-alpine3.11
+
+# Install npm version 6 globally
+
+
+WORKDIR /app
+# Set environment variables to avoid prompts during installation
+ENV PYTHONUNBUFFERED=1
+
+COPY flask-app /app
+
+RUN apk add --no-cache \
+    python2 \
+    py2-pip
+RUN npm install -g npm@6
+RUN npm install --save-dev webpack-cli
+RUN npm --version && npx webpack --version
+RUN npm run build
+RUN pip install -r requirements.txt
+
+
+ENTRYPOINT ["python2", "app.py"]
