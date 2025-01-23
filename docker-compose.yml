@@ -7,8 +7,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "5000:5000"
+    # ports:
+    #   - "5000:5000"
+    healthcheck:
+      test: curl -s http://localhost:5000 >/dev/null || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 10
     depends_on:
       es:
         condition: service_healthy
@@ -23,20 +28,39 @@ services:
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ports:
-      - "9200:9200"
-      - "9300:9300" 
+    # ports:
+    #   - "9200:9200"
+    #   - "9300:9300" 
     healthcheck:
       test: curl -s http://localhost:9200 >/dev/null || exit 1
       interval: 30s
       timeout: 10s
       retries: 10
+    user: "1000:1000"
     volumes:
       - ./es-volume:/usr/share/elasticsearch/data
     networks:
       - my-custom-network
+  
+  nginx:
+    image: nginx:1.27.3-alpine
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./flask-app/static:/data/static
+      - ./flask-app/templates:/data/templates
+    depends_on:
+      - python2-app
+    healthcheck:
+      test: curl -s http://localhost:80 >/dev/null || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    networks:
+      - my-custom-network
 
-    
 
 networks:
   my-custom-network:
