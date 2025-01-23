@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  python2-app:
+    image: flask-foodtruck:light
+    container_name: flask-dc
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    depends_on:
+      es:
+        condition: service_healthy
+    volumes:
+      - ./py-volume:/data
+    networks:
+      - my-custom-network
+
+  es:
+    image: elasticsearch:7.17.13
+    container_name: es
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300" 
+    healthcheck:
+      test: curl -s http://localhost:9200 >/dev/null || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    volumes:
+      - ./es-volume:/usr/share/elasticsearch/data
+    networks:
+      - my-custom-network
+
+    
+
+networks:
+  my-custom-network:
+    driver: bridge
+
+volumes:
+  es-volume:
+  py-volume:
+  nginx-volume:
