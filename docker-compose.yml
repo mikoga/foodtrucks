@@ -7,8 +7,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    # ports:
-    #   - "5000:5000"
+    ports:
+      - "5000:5000"
     healthcheck:
       test: curl -s http://localhost:5000 >/dev/null || exit 1
       interval: 30s
@@ -17,8 +17,8 @@ services:
     depends_on:
       es:
         condition: service_healthy
-    volumes:
-      - ./py-volume:/data
+    # volumes:
+    #   - ./py-volume:/data
     networks:
       - my-custom-network
 
@@ -28,17 +28,17 @@ services:
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    # ports:
-    #   - "9200:9200"
-    #   - "9300:9300" 
+    ports:
+      - "9200:9200"
+      - "9300:9300" 
     healthcheck:
       test: curl -s http://localhost:9200 >/dev/null || exit 1
       interval: 30s
       timeout: 10s
       retries: 10
     user: "1000:1000"
-    volumes:
-      - ./es-volume:/usr/share/elasticsearch/data
+    # volumes:
+      # - ./es-volume:/usr/share/elasticsearch/data
     networks:
       - my-custom-network
   
@@ -52,6 +52,7 @@ services:
       - ./flask-app/static:/data/static
       - ./flask-app/templates:/data/templates
     depends_on:
+      - es
       - python2-app
     healthcheck:
       test: curl -s http://localhost:80 >/dev/null || exit 1
@@ -65,8 +66,3 @@ services:
 networks:
   my-custom-network:
     driver: bridge
-
-volumes:
-  es-volume:
-  py-volume:
-  nginx-volume:
